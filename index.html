@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jurnal Trading</title>
 
-<!-- PWA Manifest -->
+<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon192.png">
 <link rel="apple-touch-icon" href="icon192.png">
@@ -13,34 +13,110 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 
 <style>
-* {box-sizing:border-box;}
+*{box-sizing:border-box}
+
 :root{
-  --bg:#0f172a; --card:#1e293b; --muted:#94a3b8;
-  --green:#22c55e; --red:#ef4444; --yellow:#eab308;
+  --bg-dark:#0f172a;
+  --card-dark:#1e293b;
+  --input-dark:#020617;
+
+  --bg-light:#f1f5f9;
+  --card-light:#ffffff;
+  --input-light:#f8fafc;
+  --border-light:#cbd5e1;
+
+  --green:#22c55e;
+  --red:#ef4444;
+  --muted:#64748b;
 }
+
 body{
-  margin:0; font-family:system-ui,sans-serif;
-  background:var(--bg); color:#e5e7eb; padding:16px;
+  margin:0;
+  font-family:system-ui,sans-serif;
+  background:var(--bg-dark);
+  color:#e5e7eb;
+  padding:16px;
 }
-body.light{background:#f3f4f6;color:#111827}
-.container{max-width:480px;margin:auto;}
-.card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;}
-body.light .card{background:#fff}
-input,select,textarea,button{width:100%;padding:10px 12px;margin:6px 0;border-radius:10px;border:none;font-size:14px;}
-input,select,textarea{background:#020617;color:#e5e7eb;}
-body.light input,body.light select,body.light textarea{background:#fff;color:#111827;}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
-.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
-.actions{display:flex;gap:8px;margin-bottom:12px;}
-.trade{display:flex;justify-content:space-between;gap:10px;}
-.pl.plus{color:var(--green);}
-.pl.minus{color:var(--red);}
-.badge{padding:3px 10px;border-radius:999px;font-size:12px;}
-.badge.TP{background:#14532d;color:#bbf7d0;}
-.badge.SL{background:#7f1d1d;color:#fecaca;}
-.badge.BEP{background:#78350f;color:#fde68a;}
-button.edit{background:#334155;color:#fff;}
-button.delete{background:#7f1d1d;color:#fecaca;}
+
+body.light{
+  background:var(--bg-light);
+  color:#0f172a;
+}
+
+.container{max-width:480px;margin:auto}
+
+.card{
+  background:var(--card-dark);
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:12px;
+}
+
+body.light .card{
+  background:var(--card-light);
+}
+
+input,select,textarea,button{
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+  border:none;
+  font-size:14px;
+}
+
+input,select,textarea{
+  background:var(--input-dark);
+  color:#e5e7eb;
+}
+
+body.light input,
+body.light select,
+body.light textarea{
+  background:var(--input-light);
+  color:#0f172a;
+  border:1px solid var(--border-light);
+}
+
+textarea{resize:none}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.small{font-size:12px;color:var(--muted)}
+
+button{
+  background:var(--green);
+  font-weight:700;
+  cursor:pointer;
+}
+
+.actions{display:flex;gap:8px;margin-bottom:12px}
+
+.trade{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.pl.plus{color:var(--green)}
+.pl.minus{color:var(--red)}
+
+.badge{
+  padding:3px 10px;
+  border-radius:999px;
+  font-size:12px;
+}
+
+.badge.TP{background:#14532d;color:#bbf7d0}
+.badge.SL{background:#7f1d1d;color:#fecaca}
+.badge.BEP{background:#78350f;color:#fde68a}
+
+button.edit{background:#334155;color:#fff}
+button.delete{background:#7f1d1d;color:#fecaca}
 </style>
 </head>
 
@@ -50,7 +126,7 @@ button.delete{background:#7f1d1d;color:#fecaca;}
 
 <div class="card">
   <input id="date" type="date">
-  <input id="stock" placeholder="Kode Saham (ex: BBRI)">
+  <input id="stock" placeholder="Kode Saham (BBRI)">
 
   <div class="form-grid">
     <input id="qty" type="number" placeholder="Qty (Lot)">
@@ -70,7 +146,8 @@ button.delete{background:#7f1d1d;color:#fecaca;}
     <option>BEP</option>
   </select>
 
-  <textarea id="note" rows="2" placeholder="Catatan singkat (opsional)"></textarea>
+  <textarea id="note" rows="2" placeholder="Catatan (opsional)"></textarea>
+
   <button onclick="saveTrade()">➕ Simpan Trade</button>
 </div>
 
@@ -91,21 +168,21 @@ button.delete{background:#7f1d1d;color:#fecaca;}
 </div>
 
 <script>
-date.valueAsDate = new Date();
-let trades = JSON.parse(localStorage.getItem("trades")) || [];
-let editIndex = null;
+date.valueAsDate=new Date();
+let trades=JSON.parse(localStorage.getItem("trades"))||[];
+let editIndex=null;
 
 function saveTrade(){
-  if(qty.value<=0||entry.value<=0||exit.value<=0){alert("Qty, Entry, Exit wajib diisi");return;}
-  if(result.value!=="BEP" && sl.value<=0){alert("Stop Loss wajib diisi untuk TP/SL");return;}
-  if(modal.value<=0){alert("Modal wajib diisi");return;}
+  if(qty.value<=0||entry.value<=0||exit.value<=0||modal.value<=0){
+    alert("Lengkapi data wajib");return;
+  }
 
-  const pl = (exit.value-entry.value)*qty.value*100;
-  const percent = ((exit.value-entry.value)/entry.value)*100;
-  const riskRp = Math.abs(entry.value-sl.value)*qty.value*100;
-  const riskPercent = (riskRp/modal.value)*100;
+  const pl=(exit.value-entry.value)*qty.value*100;
+  const percent=((exit.value-entry.value)/entry.value)*100;
+  const riskRp=Math.abs(entry.value-sl.value)*qty.value*100;
+  const riskPercent=(riskRp/modal.value)*100;
 
-  const tradeData={
+  const t={
     date:date.value,
     stock:stock.value.toUpperCase(),
     qty:+qty.value,
@@ -114,65 +191,89 @@ function saveTrade(){
     sl:+sl.value,
     modal:+modal.value,
     result:result.value,
-    pl,
-    percent,
-    riskRp,
-    riskPercent,
+    pl,percent,riskPercent,
     note:note.value
   };
 
-  if(editIndex!==null){trades[editIndex]=tradeData;editIndex=null;}else{trades.unshift(tradeData);}
+  editIndex!==null ? trades[editIndex]=t : trades.unshift(t);
+  editIndex=null;
   localStorage.setItem("trades",JSON.stringify(trades));
-  resetForm(); render();
+  resetForm();render();
 }
 
-function resetForm(){stock.value=qty.value=entry.value=exit.value=sl.value=modal.value=note.value="";date.valueAsDate=new Date();}
-function editTrade(i){
-  const t=trades[i];
-  date.value=t.date; stock.value=t.stock; qty.value=t.qty; entry.value=t.entry; exit.value=t.exit;
-  sl.value=t.sl; modal.value=t.modal; result.value=t.result; note.value=t.note; editIndex=i;
-  window.scrollTo({top:0,behavior:"smooth"});
+function resetForm(){
+  stock.value=qty.value=entry.value=exit.value=sl.value=modal.value=note.value="";
+  date.valueAsDate=new Date();
 }
-function deleteTrade(i){if(confirm("Hapus trade ini?")){trades.splice(i,1);localStorage.setItem("trades",JSON.stringify(trades));render();}}
 
 function render(){
-  list.innerHTML=""; let tp=0,slc=0,bep=0,total=0;
+  list.innerHTML="";
+  let tp=0,sl=0,bep=0,total=0;
+
   trades.forEach((t,i)=>{
-    total+=t.pl; if(t.result==="TP")tp++; if(t.result==="SL")slc++; if(t.result==="BEP")bep++;
+    total+=t.pl;
+    if(t.result==="TP")tp++;
+    if(t.result==="SL")sl++;
+    if(t.result==="BEP")bep++;
+
     list.innerHTML+=`
-<div class="card trade">
-  <div><b>${t.stock}</b><div class="small">${t.date}</div><span class="badge ${t.result}">${t.result}</span></div>
-  <div style="text-align:right">
-    <div class="pl ${t.pl>=0?'plus':'minus'}">${t.pl.toLocaleString()}</div>
-    <div class="small">${t.percent.toFixed(2)}% • Risk ${t.riskPercent.toFixed(2)}%</div>
-    <div style="margin-top:6px">
-      <button class="edit" onclick="editTrade(${i})">✏️</button>
-      <button class="delete" onclick="deleteTrade(${i})">🗑</button>
-    </div>
-  </div>
-</div>`;
+    <div class="card trade">
+      <div>
+        <b>${t.stock}</b>
+        <div class="small">${t.date}</div>
+        <span class="badge ${t.result}">${t.result}</span>
+      </div>
+      <div style="text-align:right">
+        <div class="pl ${t.pl>=0?'plus':'minus'}">${t.pl.toLocaleString()}</div>
+        <div class="small">${t.percent.toFixed(2)}%</div>
+        <div style="margin-top:6px">
+          <button class="edit" onclick="editTrade(${i})">✏️</button>
+          <button class="delete" onclick="deleteTrade(${i})">🗑</button>
+        </div>
+      </div>
+    </div>`;
   });
+
   count.textContent=trades.length;
   total.textContent=total.toLocaleString();
-  winrate.textContent=tp+slc>0?Math.round(tp/(tp+slc)*100)+"%":"0%";
+  winrate.textContent=(tp+sl)?Math.round(tp/(tp+sl)*100)+"%":"0%";
   bepcount.textContent=bep;
 }
 
-function exportCSV(){
-  if(!trades.length){alert("Belum ada data");return;}
-  let csv="Date,Stock,Qty,Entry,Exit,SL,Modal,Result,PL,Percent,Risk%,Note\n";
-  trades.forEach(t=>{
-    csv+=`${t.date},${t.stock},${t.qty},${t.entry},${t.exit},${t.sl},${t.modal},${t.result},${t.pl},${t.percent.toFixed(2)},${t.riskPercent.toFixed(2)},"${t.note}"\n`;
-  });
-  const a=document.createElement("a"); a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv); a.download="jurnal_trading.csv"; a.click();
+function editTrade(i){
+  const t=trades[i];
+  Object.keys(t).forEach(k=>window[k]&&(window[k].value=t[k]));
+  editIndex=i;scrollTo({top:0,behavior:"smooth"});
 }
 
-function toggleTheme(){document.body.classList.toggle("light");}
+function deleteTrade(i){
+  if(confirm("Hapus trade?")){
+    trades.splice(i,1);
+    localStorage.setItem("trades",JSON.stringify(trades));
+    render();
+  }
+}
+
+function exportCSV(){
+  if(!trades.length)return alert("Belum ada data");
+  let csv="Date,Stock,Qty,Entry,Exit,SL,Modal,Result,PL,Percent,Note\n";
+  trades.forEach(t=>{
+    csv+=`${t.date},${t.stock},${t.qty},${t.entry},${t.exit},${t.sl},${t.modal},${t.result},${t.pl},${t.percent.toFixed(2)},"${t.note}"\n`;
+  });
+  const a=document.createElement("a");
+  a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
+  a.download="jurnal_trading.csv";
+  a.click();
+}
+
+function toggleTheme(){document.body.classList.toggle("light")}
 render();
 </script>
 
 <script>
-if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}
+if("serviceWorker"in navigator){
+  navigator.serviceWorker.register("sw.js");
+}
 </script>
 </body>
 </html>
