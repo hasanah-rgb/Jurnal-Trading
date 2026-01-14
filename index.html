@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Jurnal Trading</title>
 
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon192.png">
 <link rel="apple-touch-icon" href="icon192.png">
@@ -14,61 +13,37 @@
 
 <style>
 *{box-sizing:border-box}
-
-:root{
-  --bg:#0f172a;
-  --card:#1e293b;
-  --input:#020617;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-  --green:#22c55e;
-  --red:#ef4444;
-}
-
 body{
   margin:0;
-  font-family:system-ui,-apple-system,sans-serif;
-  background:var(--bg);
-  color:var(--text);
+  font-family:system-ui,sans-serif;
+  background:#0f172a;
+  color:#e5e7eb;
   padding:14px;
 }
+body.light{background:#f3f4f6;color:#111827}
 
-body.light{
-  background:#f3f4f6;
-  color:#111827;
-}
-
-.container{
-  max-width:480px;
-  margin:auto;
-}
-
-h2,h3{margin:8px 0 12px}
-
+.container{max-width:480px;margin:auto}
 .card{
-  background:var(--card);
+  background:#1e293b;
   border-radius:14px;
-  padding:14px;
-  margin-bottom:12px;
+  padding:12px;
+  margin-bottom:10px;
 }
-
-body.light .card{
-  background:#ffffff;
-}
+body.light .card{background:#fff}
 
 input,select,textarea,button{
   width:100%;
   padding:10px 12px;
+  margin:4px 0;
   border-radius:10px;
   border:none;
   font-size:14px;
 }
 
 input,select,textarea{
-  background:var(--input);
-  color:var(--text);
+  background:#020617;
+  color:#e5e7eb;
 }
-
 body.light input,
 body.light select,
 body.light textarea{
@@ -77,24 +52,14 @@ body.light textarea{
   border:1px solid #e5e7eb;
 }
 
-textarea{resize:none}
-
-.form-group{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  margin-bottom:10px;
-}
-
-.grid-2{
+.form-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:10px;
+  gap:8px;
 }
 
 button{
-  background:var(--green);
+  background:#22c55e;
   font-weight:700;
   cursor:pointer;
 }
@@ -102,7 +67,7 @@ button{
 .actions{
   display:flex;
   gap:8px;
-  margin-bottom:12px;
+  margin-bottom:10px;
 }
 
 .trade{
@@ -111,34 +76,21 @@ button{
   gap:10px;
 }
 
+.small{font-size:12px;color:#94a3b8}
+.pl.plus{color:#22c55e}
+.pl.minus{color:#ef4444}
+
 .badge{
-  display:inline-block;
   padding:3px 10px;
   border-radius:999px;
   font-size:12px;
 }
-
 .badge.TP{background:#14532d;color:#bbf7d0}
 .badge.SL{background:#7f1d1d;color:#fecaca}
 .badge.BEP{background:#78350f;color:#fde68a}
 
-.pl.plus{color:var(--green)}
-.pl.minus{color:var(--red)}
-
-.small{
-  font-size:12px;
-  color:var(--muted);
-}
-
-button.edit{
-  background:#334155;
-  color:#fff;
-}
-
-button.delete{
-  background:#7f1d1d;
-  color:#fecaca;
-}
+button.edit{background:#334155;color:#fff}
+button.delete{background:#7f1d1d;color:#fecaca}
 </style>
 </head>
 
@@ -148,41 +100,18 @@ button.delete{
 <h2>📊 Jurnal Trading</h2>
 
 <div class="card">
-
-  <div class="form-group">
-    <input id="date" type="date">
-  </div>
-
-  <div class="form-group">
-    <input id="stock" placeholder="Kode Saham (BBRI)">
-  </div>
-
-  <div class="grid-2">
+  <input id="date" type="date">
+  <input id="stock" placeholder="Kode Saham (BBRI)">
+  <div class="form-grid">
     <input id="qty" type="number" placeholder="Qty (Lot)">
     <input id="modal" type="number" placeholder="Modal (Rp)">
   </div>
-
-  <div class="grid-2">
+  <div class="form-grid">
     <input id="entry" type="number" placeholder="Entry">
     <input id="exit" type="number" placeholder="Exit">
   </div>
-
-  <div class="form-group">
-    <input id="sl" type="number" placeholder="Stop Loss">
-  </div>
-
-  <div class="form-group">
-    <select id="result">
-      <option>TP</option>
-      <option>SL</option>
-      <option>BEP</option>
-    </select>
-  </div>
-
-  <div class="form-group">
-    <textarea id="note" rows="2" placeholder="Catatan (opsional)"></textarea>
-  </div>
-
+  <input id="sl" type="number" placeholder="Stop Loss (opsional)">
+  <textarea id="note" rows="2" placeholder="Catatan (opsional)"></textarea>
   <button onclick="saveTrade()">➕ Simpan Trade</button>
 </div>
 
@@ -209,30 +138,47 @@ let trades = JSON.parse(localStorage.getItem("trades")) || [];
 let editIndex = null;
 
 function saveTrade(){
-  if(qty.value<=0||entry.value<=0||exit.value<=0||modal.value<=0){
-    alert("Field wajib belum lengkap");
+  const qtyVal = +qty.value;
+  const entryVal = +entry.value;
+  const exitVal = +exit.value;
+  const slVal = +sl.value;
+  const modalVal = +modal.value;
+
+  if(qtyVal<=0 || entryVal<=0 || exitVal<=0){
+    alert("Qty, Entry, Exit wajib diisi");
     return;
   }
 
-  const pl=(exit.value-entry.value)*qty.value*100;
-  const percent=((exit.value-entry.value)/entry.value)*100;
-  const riskRp=Math.abs(entry.value-sl.value)*qty.value*100;
-  const riskPercent=sl.value>0?(riskRp/modal.value)*100:0;
+  let result="BEP", pl=0, percent=0, riskPercent=0;
+
+  if(exitVal === entryVal){
+    result="BEP";
+  }else{
+    if(exitVal > entryVal){
+      result="TP";
+      pl=(exitVal-entryVal)*qtyVal*100;
+    }else{
+      result="SL";
+      pl=(exitVal-entryVal)*qtyVal*100;
+    }
+    percent=(pl/(entryVal*qtyVal*100))*100;
+  }
+
+  if(result!=="BEP" && slVal && modalVal){
+    const riskRp=Math.abs(entryVal-slVal)*qtyVal*100;
+    riskPercent=(riskRp/modalVal)*100;
+  }
 
   const data={
     date:date.value,
     stock:stock.value.toUpperCase(),
-    qty:+qty.value,
-    entry:+entry.value,
-    exit:+exit.value,
-    sl:+sl.value,
-    modal:+modal.value,
-    result:result.value,
-    pl,
-    percent,
-    riskPercent,
-    note:note.value,
-    ts:Date.now()
+    qty:qtyVal,
+    entry:entryVal,
+    exit:exitVal,
+    sl:slVal||"",
+    modal:modalVal||"",
+    result,pl,percent,riskPercent,
+    note:note.value
   };
 
   if(editIndex!==null){
@@ -261,7 +207,6 @@ function editTrade(i){
   exit.value=t.exit;
   sl.value=t.sl;
   modal.value=t.modal;
-  result.value=t.result;
   note.value=t.note;
   editIndex=i;
   window.scrollTo({top:0,behavior:"smooth"});
@@ -279,52 +224,41 @@ function render(){
   list.innerHTML="";
   let tp=0,slc=0,bep=0,total=0;
 
-  trades
-  .sort((a,b)=>{
-    if(a.date === b.date){
-      return b.ts - a.ts; // tanggal sama → newest dulu
-    }
-    return new Date(b.date) - new Date(a.date); // tanggal terbaru di atas
-  })
-  .forEach((t,i)=>{
-      total+=t.pl;
-      if(t.result==="TP")tp++;
-      if(t.result==="SL")slc++;
-      if(t.result==="BEP")bep++;
+  trades.forEach((t,i)=>{
+    total+=t.pl;
+    if(t.result==="TP") tp++;
+    if(t.result==="SL") slc++;
+    if(t.result==="BEP") bep++;
 
-      list.innerHTML+=`
-      <div class="card trade">
-        <div>
-          <b>${t.stock}</b>
-          <div class="small">${t.date}</div>
-          <span class="badge ${t.result}">${t.result}</span>
-        </div>
-        <div style="text-align:right">
-          <div class="pl ${t.pl>=0?'plus':'minus'}">
-            ${t.pl.toLocaleString()}
-          </div>
-          <div class="small">
-            ${t.percent.toFixed(2)}% • Risk ${t.riskPercent.toFixed(2)}%
-          </div>
-          <div style="margin-top:6px">
-            <button class="edit" onclick="editTrade(${i})">✏️</button>
-            <button class="delete" onclick="deleteTrade(${i})">🗑</button>
-          </div>
-        </div>
-      </div>`;
-    });
+    list.innerHTML+=`
+<div class="card trade">
+  <div>
+    <b>${t.stock}</b>
+    <div class="small">${t.date}</div>
+    <span class="badge ${t.result}">${t.result}</span>
+  </div>
+  <div style="text-align:right">
+    <div class="pl ${t.pl>=0?'plus':'minus'}">${t.pl.toLocaleString()}</div>
+    <div class="small">${t.percent.toFixed(2)}% • Risk ${t.riskPercent.toFixed(2)}%</div>
+    <div style="margin-top:6px">
+      <button class="edit" onclick="editTrade(${i})">✏️</button>
+      <button class="delete" onclick="deleteTrade(${i})">🗑</button>
+    </div>
+  </div>
+</div>`;
+  });
 
   count.textContent=trades.length;
   total.textContent=total.toLocaleString();
-  winrate.textContent=tp+slc?Math.round(tp/(tp+slc)*100)+"%":"0%";
+  winrate.textContent=(tp+slc)?Math.round(tp/(tp+slc)*100)+"%":"0%";
   bepcount.textContent=bep;
 }
 
 function exportCSV(){
   if(!trades.length){alert("Belum ada data");return;}
-  let csv="Date,Stock,Qty,Entry,Exit,Result,PL,Percent,Risk%,Note\n";
+  let csv="Date,Stock,Qty,Entry,Exit,SL,Modal,Result,PL,Percent,Risk%,Note\n";
   trades.forEach(t=>{
-    csv+=`${t.date},${t.stock},${t.qty},${t.entry},${t.exit},${t.result},${t.pl},${t.percent.toFixed(2)},${t.riskPercent.toFixed(2)},"${t.note}"\n`;
+    csv+=`${t.date},${t.stock},${t.qty},${t.entry},${t.exit},${t.sl},${t.modal},${t.result},${t.pl},${t.percent.toFixed(2)},${t.riskPercent.toFixed(2)},"${t.note}"\n`;
   });
   const a=document.createElement("a");
   a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
@@ -339,11 +273,5 @@ function toggleTheme(){
 render();
 </script>
 
-<script>
-if("serviceWorker"in navigator){
-  navigator.serviceWorker.register("sw.js");
-}
-</script>
 </body>
 </html>
-
