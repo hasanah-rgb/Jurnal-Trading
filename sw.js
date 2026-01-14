@@ -1,30 +1,37 @@
-const CACHE_NAME = "journal-pwa-v1";
-const FILES_TO_CACHE = [
+const CACHE_NAME = "journal-static";
+
+const STATIC_FILES = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon192.png"
 ];
 
-self.addEventListener("install", event => {
+// Install
+self.addEventListener("install", e => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(c => c.addAll(STATIC_FILES))
   );
 });
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-      )
-    )
-  );
+// Activate
+self.addEventListener("activate", e => {
+  e.waitUntil(self.clients.claim());
 });
 
-self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.match(event.request).then(res => res || fetch(event.request))
+// Fetch
+self.addEventListener("fetch", e => {
+  if (e.request.mode === "navigate") {
+    // HTML → ALWAYS NETWORK FIRST
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
+
+  // Others → cache first
+  e.respondWith(
+    caches.match(e.request).then(res => res || fetch(e.request))
   );
 });
