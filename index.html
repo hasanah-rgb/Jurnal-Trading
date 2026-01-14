@@ -280,8 +280,13 @@ function render(){
   let tp=0,slc=0,bep=0,total=0;
 
   trades
-    .sort((a,b)=>b.ts-a.ts)
-    .forEach((t,i)=>{
+  .sort((a,b)=>{
+    if(a.date === b.date){
+      return b.ts - a.ts; // tanggal sama → newest dulu
+    }
+    return new Date(b.date) - new Date(a.date); // tanggal terbaru di atas
+  })
+  .forEach((t,i)=>{
       total+=t.pl;
       if(t.result==="TP")tp++;
       if(t.result==="SL")slc++;
@@ -341,3 +346,4 @@ if("serviceWorker"in navigator){
 </script>
 </body>
 </html>
+
